@@ -1,0 +1,12 @@
+import { {{pascalCase handlerName}}Handler } from '{{configAlias "api"}}/handlers';
+import { {{config.hooks.paginatedQuery.import}} } from '{{config.hooks.paginatedQuery.from}}';
+
+import type { {{pascalCase handlerName}}{{dtoSuffix "list"}} } from '{{configAlias "types"}}';
+
+export const use{{pascalCase hookName}}Query = () => {
+  return {{config.hooks.paginatedQuery.import}}<{{pascalCase handlerName}}{{dtoSuffix "list"}}>({
+    queryKey: [{{pascalCase handlerName}}Handler.{{handlerKey}}.queryKey],
+    queryFn: (params: string) => {{pascalCase handlerName}}Handler.{{handlerKey}}.request(params),
+    defaultPageSize: 10,
+  });
+};

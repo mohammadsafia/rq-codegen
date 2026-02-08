@@ -1,0 +1,9 @@
+import { {{#each reactImports}}{{this}}{{#unless @last}}, {{/unless}}{{/each}} } from 'react';
+
+export const use{{pascalCase name}} = () => {
+  // TODO: Implement hook logic
+
+  return {
+    // TODO: Return hook values
+  };
+};

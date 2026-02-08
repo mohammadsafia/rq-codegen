@@ -1,0 +1,53 @@
+import { {{pascalCase handlerName}}Handler } from '{{configAlias "api"}}/handlers';
+{{#ifFeature "toast"}}
+import { {{config.hooks.toast.import}} } from '{{config.hooks.toast.from}}';
+{{/ifFeature}}
+{{#ifFeature "i18n"}}
+import { {{config.hooks.translation.import}} } from '{{config.hooks.translation.from}}';
+{{/ifFeature}}
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+export const use{{pascalCase mutationName}}Mutation = () => {
+  const queryClient = useQueryClient();
+{{#ifFeature "toast"}}
+  const { toast } = {{config.hooks.toast.import}}();
+{{/ifFeature}}
+{{#ifFeature "i18n"}}
+  const { t } = {{config.hooks.translation.import}}();
+{{/ifFeature}}
+
+  return useMutation({
+    mutationKey: [{{pascalCase handlerName}}Handler.{{handlerKey}}.mutationKey],
+    mutationFn: {{pascalCase handlerName}}Handler.{{handlerKey}}.mutationFn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [{{pascalCase handlerName}}Handler.{{invalidateKey}}.queryKey],
+      });
+{{#ifFeature "toast"}}
+      toast({
+        variant: 'success',
+{{#ifFeature "i18n"}}
+        title: t('common.success'),
+{{else}}
+        title: 'Success',
+{{/ifFeature}}
+      });
+{{/ifFeature}}
+    },
+    onError: (error: { response: { data: { title: string; message?: string; detail: string } } }) => {
+{{#ifFeature "toast"}}
+      const errorMessage =
+{{#ifFeature "i18n"}}
+        error?.response?.data?.title || error?.response?.data?.message || t('errors.unexpectedError');
+{{else}}
+        error?.response?.data?.title || error?.response?.data?.message || 'An unexpected error occurred';
+{{/ifFeature}}
+      toast({
+        variant: 'destructive',
+        title: errorMessage,
+        description: error?.response?.data?.detail || '',
+      });
+{{/ifFeature}}
+    },
+  });
+};

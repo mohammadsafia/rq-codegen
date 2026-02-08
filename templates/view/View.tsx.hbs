@@ -1,0 +1,13 @@
+import { cn } from '{{configAlias "utils"}}';
+
+type {{pascalCase name}}Props = {
+  className?: string;
+};
+
+export default function {{pascalCase name}}({ className }: {{pascalCase name}}Props) {
+  return (
+    <div className={cn('', className)}>
+      <h2>{{pascalCase name}}</h2>
+    </div>
+  );
+}

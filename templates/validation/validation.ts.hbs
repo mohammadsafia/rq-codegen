@@ -1,0 +1,22 @@
+import { z } from 'zod';
+{{#ifFeature "i18n"}}
+import type { TFunction } from 'i18next';
+
+export const {{camelCase name}}Schema = (t: TFunction) =>
+  z.object({
+    // TODO: Add validation fields
+    // Example:
+    // name: z.string().min(1, t('validation.{{camelCase name}}.name.required')),
+  });
+
+export type {{pascalCase name}}FormData = z.infer<ReturnType<typeof {{camelCase name}}Schema>>;
+{{else}}
+
+export const {{camelCase name}}Schema = z.object({
+  // TODO: Add validation fields
+  // Example:
+  // name: z.string().min(1, 'Name is required'),
+});
+
+export type {{pascalCase name}}FormData = z.infer<typeof {{camelCase name}}Schema>;
+{{/ifFeature}}

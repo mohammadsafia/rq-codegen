@@ -1,0 +1,12 @@
+import { {{pascalCase handlerName}}Handler } from '{{configAlias "api"}}/handlers';
+import { useQuery } from '@tanstack/react-query';
+
+export const use{{pascalCase hookName}}Query = (id: string | undefined, enabled = true) => {
+  return useQuery({
+    queryKey: [{{pascalCase handlerName}}Handler.{{handlerKey}}.queryKey, id],
+    queryFn: () => {{pascalCase handlerName}}Handler.{{handlerKey}}.request(id!),
+    enabled: enabled && !!id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};

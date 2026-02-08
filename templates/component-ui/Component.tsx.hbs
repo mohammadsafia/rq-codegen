@@ -1,0 +1,41 @@
+import * as React from 'react';
+
+import { cva, type VariantProps } from 'class-variance-authority';
+
+import { cn } from '{{configAlias "utils"}}';
+
+export const {{camelCase name}}Variants = cva(
+  'inline-flex items-center justify-center',
+  {
+    variants: {
+      variant: {
+        default: '',
+      },
+      size: {
+        sm: '',
+        md: '',
+        lg: '',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'md',
+    },
+  },
+);
+
+export type {{pascalCase name}}Variants = VariantProps<typeof {{camelCase name}}Variants>;
+
+type {{pascalCase name}}Props = React.ComponentPropsWithoutRef<'div'> & {{pascalCase name}}Variants;
+
+export default function {{pascalCase name}}({ className, variant, size, children, ...props }: {{pascalCase name}}Props) {
+  return (
+    <div
+      data-slot="{{kebabCase name}}"
+      className={cn({{camelCase name}}Variants({ variant, size, className }))}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}

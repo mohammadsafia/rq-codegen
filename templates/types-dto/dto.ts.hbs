@@ -1,0 +1,40 @@
+export type {{pascalCase name}}{{dtoSuffix "read"}} = {
+  id: number;
+  // TODO: Add read fields
+};
+
+{{#if includeCreateDto}}
+export type {{pascalCase name}}{{dtoSuffix "create"}} = {
+  // TODO: Add create fields
+};
+
+{{/if}}
+{{#if includeUpdateDto}}
+export type {{pascalCase name}}{{dtoSuffix "update"}} = {
+  id: number;
+  // TODO: Add update fields
+};
+
+{{/if}}
+export type {{pascalCase name}}{{dtoSuffix "list"}} = {
+  id: number;
+  // TODO: Add minimal list fields
+};
+
+export type {{pascalCase name}}{{dtoSuffix "listResponse"}} = {
+  items: {{pascalCase name}}{{dtoSuffix "list"}}[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  lastPage: number;
+};
+
+{{#if includeParamsDto}}
+export type {{pascalCase name}}{{dtoSuffix "params"}} = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sort?: string;
+  filter?: string;
+};
+{{/if}}

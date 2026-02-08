@@ -1,0 +1,80 @@
+import { ApiEndpoints, HttpClient } from '{{configAlias "api"}}/config';
+
+import type {
+  {{pascalCase name}}{{dtoSuffix "read"}},
+{{#if (includes operations "list")}}
+  {{pascalCase name}}{{dtoSuffix "listResponse"}},
+{{/if}}
+{{#if (includes operations "create")}}
+  {{pascalCase name}}{{dtoSuffix "create"}},
+{{/if}}
+{{#if (includes operations "update")}}
+  {{pascalCase name}}{{dtoSuffix "update"}},
+{{/if}}
+} from '{{configAlias "types"}}';
+
+const URL = ApiEndpoints.{{constantCase endpointKey}};
+
+{{#if (includes operations "list")}}
+function get{{pascalCase name}}List(queryString?: string): Promise<{{pascalCase name}}{{dtoSuffix "listResponse"}}> {
+  const url = queryString ? `${URL.INDEX}?${queryString}` : URL.INDEX;
+  return HttpClient.get<{{pascalCase name}}{{dtoSuffix "listResponse"}}>(url);
+}
+
+{{/if}}
+{{#if (includes operations "details")}}
+function get{{pascalCase name}}Details(id: string): Promise<{{pascalCase name}}{{dtoSuffix "read"}}> {
+  return HttpClient.get<{{pascalCase name}}{{dtoSuffix "read"}}>(URL.DETAILS.replace(':id', id));
+}
+
+{{/if}}
+{{#if (includes operations "create")}}
+function create{{pascalCase name}}(payload: {{pascalCase name}}{{dtoSuffix "create"}}): Promise<{{pascalCase name}}{{dtoSuffix "read"}}> {
+  return HttpClient.post<{{pascalCase name}}{{dtoSuffix "read"}}>(URL.INDEX, payload);
+}
+
+{{/if}}
+{{#if (includes operations "update")}}
+function update{{pascalCase name}}(id: string, payload: {{pascalCase name}}{{dtoSuffix "update"}}): Promise<{{pascalCase name}}{{dtoSuffix "read"}}> {
+  return HttpClient.put<{{pascalCase name}}{{dtoSuffix "read"}}>(URL.DETAILS.replace(':id', id), payload);
+}
+
+{{/if}}
+{{#if (includes operations "delete")}}
+function remove{{pascalCase name}}(id: string): Promise<void> {
+  return HttpClient.delete<void>(URL.DETAILS.replace(':id', id));
+}
+
+{{/if}}
+export const {{pascalCase name}}Handler = {
+{{#if (includes operations "list")}}
+  list: {
+    queryKey: '{{kebabCase name}}/list',
+    request: get{{pascalCase name}}List,
+  },
+{{/if}}
+{{#if (includes operations "details")}}
+  details: {
+    queryKey: '{{kebabCase name}}/details',
+    request: get{{pascalCase name}}Details,
+  },
+{{/if}}
+{{#if (includes operations "create")}}
+  create: {
+    mutationKey: '{{kebabCase name}}/create',
+    mutationFn: create{{pascalCase name}},
+  },
+{{/if}}
+{{#if (includes operations "update")}}
+  update: {
+    mutationKey: '{{kebabCase name}}/update',
+    mutationFn: update{{pascalCase name}},
+  },
+{{/if}}
+{{#if (includes operations "delete")}}
+  remove: {
+    mutationKey: '{{kebabCase name}}/remove',
+    mutationFn: remove{{pascalCase name}},
+  },
+{{/if}}
+} as const;

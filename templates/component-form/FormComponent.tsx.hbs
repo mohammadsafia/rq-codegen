@@ -1,0 +1,60 @@
+import { type InputHTMLAttributes, useId } from 'react';
+import { type FieldValues, useController } from 'react-hook-form';
+
+import { Input } from '{{configAlias "components"}}/ui';
+
+import { FormControl, FormLabel, FormMessage } from '{{configAlias "components"}}/forms';
+
+import { cn } from '{{configAlias "utils"}}';
+
+import type { FieldBaseProps } from '{{configAlias "types"}}';
+
+type Form{{pascalCase name}}Props<TFieldValues extends FieldValues> = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'name'
+> &
+  FieldBaseProps<TFieldValues>;
+
+function Form{{pascalCase name}}<TFieldValues extends FieldValues>({
+  name,
+  label,
+  className,
+  containerClassName,
+  labelClassName,
+  errorClassName,
+  required,
+  ...props
+}: Form{{pascalCase name}}Props<TFieldValues>) {
+  const { field, fieldState } = useController<TFieldValues>({ name });
+  const { error } = fieldState;
+  const id = `${name}-${useId()}`;
+
+  return (
+    <FormControl className={containerClassName}>
+      <FormLabel
+        className={cn('dubai-sm-medium', labelClassName)}
+        hidden={!label}
+        error={error!}
+        htmlFor={id}
+        required={required}
+      >
+        {label}
+      </FormLabel>
+
+      <div className="relative">
+        <Input
+          id={id}
+          autoComplete="off"
+          destructive={!!error}
+          className={cn('dubai-md-regular', className)}
+          {...field}
+          {...props}
+        />
+
+        <FormMessage className={errorClassName} hidden={!error} error={error!} />
+      </div>
+    </FormControl>
+  );
+}
+
+export default Form{{pascalCase name}};
