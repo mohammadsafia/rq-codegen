@@ -1,10 +1,16 @@
 import fs from 'fs';
 import path from 'path';
-import { pathToFileURL } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 import { DEFAULT_CONFIG } from './defaults.js';
 import { configSchema } from './schema.js';
 import type { RqCodegenConfig } from './types.js';
+
+// Resolve the CLI package root so jiti can find @appswave/rq-codegen
+// when loading config files from user projects that don't have it installed locally.
+// At runtime, this file is bundled into dist/bin/cli.js, so we go up 2 levels.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CLI_PACKAGE_ROOT = path.resolve(__dirname, '..', '..');
 
 function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
   const result = { ...target };
@@ -128,18 +134,25 @@ async function loadConfigFromFile(configPath: string): Promise<Partial<RqCodegen
   }
 
   if (ext === '.ts' || ext === '.mts') {
-    // For TypeScript config files, we use tsx or ts-node via dynamic import
-    // The user needs tsx installed for .ts config support
     try {
-      const fileUrl = pathToFileURL(configPath).href;
-      const mod = await import(fileUrl);
-      return mod.default ?? mod;
-    } catch {
-      // If direct import fails, try reading as JSON-like
+      const { createJiti } = await import('jiti');
+      const jiti = createJiti(configPath, {
+        interopDefault: true,
+        alias: {
+          '@appswave/rq-codegen': CLI_PACKAGE_ROOT,
+        },
+      });
+      const mod = (await jiti.import(configPath)) as
+        | { default?: Partial<RqCodegenConfig> }
+        | Partial<RqCodegenConfig>;
+      if (mod && typeof mod === 'object' && 'default' in mod && mod.default) {
+        return mod.default;
+      }
+      return mod as Partial<RqCodegenConfig>;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       throw new Error(
-        `Failed to load TypeScript config: ${configPath}\n` +
-          'Make sure you have "tsx" installed: npm i -D tsx\n' +
-          'And run with: NODE_OPTIONS="--import tsx" rq-codegen',
+        `Failed to load TypeScript config: ${configPath}\n${message}`,
       );
     }
   }

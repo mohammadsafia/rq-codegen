@@ -3,7 +3,7 @@ import path from 'path';
 import Handlebars from 'handlebars';
 
 import type { RqCodegenConfig } from '../config/types.js';
-import { toPascalCase, toKebabCase, toConstantCase } from '../utils/string.js';
+import { toConstantCase, toKebabCase, toPascalCase } from '../utils/string.js';
 import { ensureDirectoryExists } from '../utils/fs.js';
 
 export type ActionResult = {
@@ -151,5 +151,166 @@ export function routeRegister(
     }
   }
 
+  // 3. Add route element entry to router file
+  // Re-read router content (it may have been updated in step 1)
+  routerContent = fs.readFileSync(routerFilePath, 'utf-8');
+  const componentName = `${pascalName}${pageSuffix}`;
+  const routeEntry = `{ path: FULL_ROUTES_PATH.${constantCategory}.${constantPage}, element: <${componentName} /> }`;
+
+  if (routerContent.includes(routeEntry)) {
+    results.push({ type: 'skipped', path: routerFilePath, message: 'Route entry already exists in router' });
+  } else {
+    // Find the correct layout section to insert into
+    // Look for: element: <{Layout} />,  then find its children array
+    const layoutName = data.layout;
+    const accessSection = data.isProtected ? 'Protected' : 'Public';
+
+    // Strategy: Find the layout element, then find the last route entry in its children
+    // Pattern: element: <MainLayout /> or element: <DashboardLayout />
+    // We look for the correct access + layout combo
+
+    let inserted = false;
+
+    // For protected routes, look inside AuthGuard > Layout > children
+    // For public routes, look inside the Layout > children directly
+    const layoutPattern = new RegExp(
+      `element:\\s*<${layoutName}\\s*/>`,
+      'g',
+    );
+
+    let layoutMatch: RegExpExecArray | null;
+    const layoutMatches: number[] = [];
+    while ((layoutMatch = layoutPattern.exec(routerContent)) !== null) {
+      layoutMatches.push(layoutMatch.index);
+    }
+
+    // Pick the right layout occurrence based on protected vs public
+    // The router typically has: public routes first, then guest-only, then protected
+    for (const matchIndex of layoutMatches) {
+      // Check if this layout is inside a protected or public section by looking backwards
+      const beforeMatch = routerContent.slice(0, matchIndex);
+
+      const isInProtected = beforeMatch.lastIndexOf('element: <AuthGuard />') >
+        beforeMatch.lastIndexOf('── Public');
+      const isInPublic = !isInProtected;
+
+      if ((data.isProtected && isInProtected) || (!data.isProtected && isInPublic)) {
+        // Find the children array after this layout
+        const childrenStart = routerContent.indexOf('children: [', matchIndex);
+        if (childrenStart === -1) continue;
+
+        // Find the closing bracket of this children array
+        let bracketDepth = 0;
+        let childrenEnd = -1;
+        for (let i = childrenStart + 'children: ['.length; i < routerContent.length; i++) {
+          if (routerContent[i] === '[') bracketDepth++;
+          if (routerContent[i] === ']') {
+            if (bracketDepth === 0) {
+              childrenEnd = i;
+              break;
+            }
+            bracketDepth--;
+          }
+        }
+
+        if (childrenEnd !== -1) {
+          // Insert before the closing bracket, with proper indentation
+          const indent = '            ';
+          const newRoute = `\n${indent}${routeEntry},`;
+          routerContent =
+            routerContent.slice(0, childrenEnd) + newRoute + '\n' + '          ' + routerContent.slice(childrenEnd);
+          fs.writeFileSync(routerFilePath, routerContent, 'utf-8');
+          results.push({
+            type: 'updated',
+            path: routerFilePath,
+            message: `Added ${accessSection.toLowerCase()} route for ${componentName} under ${layoutName}`,
+          });
+          inserted = true;
+          break;
+        }
+      }
+    }
+
+    if (!inserted) {
+      results.push({
+        type: 'failed',
+        path: routerFilePath,
+        message: `Could not find ${layoutName} section for ${accessSection.toLowerCase()} routes. Add manually:\n  ${routeEntry}`,
+      });
+    }
+  }
+
   return results;
+}
+
+export function endpointRegister(
+  config: RqCodegenConfig,
+  data: {
+    endpointKey: string;
+    apiBaseUrl: string;
+    operations: string[];
+  },
+): ActionResult {
+  const endpointsFilePath = path.resolve(
+    process.cwd(),
+    config.srcDir,
+    config.paths.apiConfig,
+    'ApiEndpoints.ts',
+  );
+
+  if (!fs.existsSync(endpointsFilePath)) {
+    return {
+      type: 'failed',
+      path: endpointsFilePath,
+      message: `ApiEndpoints file not found at ${endpointsFilePath}`,
+    };
+  }
+
+  let content = fs.readFileSync(endpointsFilePath, 'utf-8');
+  const constantKey = toConstantCase(data.endpointKey);
+
+  // Check if this endpoint key already exists
+  const keyRegex = new RegExp(`\\b${constantKey}\\s*:\\s*\\{`);
+  if (keyRegex.test(content)) {
+    return {
+      type: 'skipped',
+      path: endpointsFilePath,
+      message: `Endpoint key ${constantKey} already exists in ApiEndpoints`,
+    };
+  }
+
+  // Build the endpoint entries based on selected operations
+  const baseUrl = data.apiBaseUrl.replace(/\/+$/, ''); // trim trailing slashes
+  const entries: string[] = [];
+
+  entries.push(`    INDEX: '${baseUrl}',`);
+
+  if (data.operations.includes('details') || data.operations.includes('update') || data.operations.includes('delete')) {
+    entries.push(`    DETAILS: '${baseUrl}/:id',`);
+  }
+
+  const newEndpointBlock = `  ${constantKey}: {\n${entries.join('\n')}\n  },`;
+
+  // Find the closing `} as const;` and insert before it
+  const closingPattern = '} as const;';
+  const closingIndex = content.lastIndexOf(closingPattern);
+
+  if (closingIndex === -1) {
+    return {
+      type: 'failed',
+      path: endpointsFilePath,
+      message: 'Could not find "} as const;" in ApiEndpoints file',
+    };
+  }
+
+  content =
+    content.slice(0, closingIndex) + newEndpointBlock + '\n' + content.slice(closingIndex);
+
+  fs.writeFileSync(endpointsFilePath, content, 'utf-8');
+
+  return {
+    type: 'updated',
+    path: endpointsFilePath,
+    message: `Registered endpoint ${constantKey} in ApiEndpoints`,
+  };
 }

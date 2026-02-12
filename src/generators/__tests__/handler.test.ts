@@ -4,9 +4,9 @@ import { handlerPrompts, handlerActions, type HandlerAnswers } from '../handler.
 import { DEFAULT_CONFIG } from '../../config/defaults.js';
 
 describe('handlerPrompts', () => {
-  it('returns 8 prompts', () => {
+  it('returns 9 prompts', () => {
     const prompts = handlerPrompts();
-    expect(prompts).toHaveLength(8);
+    expect(prompts).toHaveLength(9);
   });
 
   it('has name, singularName, endpointKey prompts', () => {
@@ -52,6 +52,7 @@ describe('handlerActions', () => {
     name: 'Community',
     singularName: 'community',
     endpointKey: 'COMMUNITY',
+    apiBaseUrl: '/o/headless-marketplace/v1.0/communities',
     operations: ['list', 'details', 'create', 'update', 'delete'],
     chainTypes: true,
     chainQueryHook: true,
@@ -59,17 +60,20 @@ describe('handlerActions', () => {
     chainMutationHook: true,
   };
 
-  it('always creates handler file + barrel', () => {
+  it('always registers endpoint, creates handler file + barrel', () => {
     const actions = handlerActions(baseAnswers, DEFAULT_CONFIG);
 
-    const addAction = actions[0];
+    // First action is endpoint-register
+    expect(actions[0].type).toBe('endpoint-register');
+
+    const addAction = actions[1];
     expect(addAction.type).toBe('add');
     if (addAction.type === 'add') {
       expect(addAction.path).toContain('{{camelCase name}}.ts');
       expect(addAction.templateFile).toBe('handler/handler.ts.hbs');
     }
 
-    expect(actions[1].type).toBe('barrel-append');
+    expect(actions[2].type).toBe('barrel-append');
   });
 
   it('creates DTO types when chainTypes is true', () => {
@@ -206,7 +210,7 @@ describe('handlerActions', () => {
     };
 
     const actions = handlerActions(baseAnswers, customConfig);
-    const handlerAction = actions[0];
+    const handlerAction = actions[1]; // index 1 because index 0 is endpoint-register
     if (handlerAction.type === 'add') {
       expect(handlerAction.path).toContain('custom/handlers');
     }

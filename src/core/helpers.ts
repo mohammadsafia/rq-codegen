@@ -54,6 +54,13 @@ export function registerHelpers(handlebars: typeof Handlebars, config: RqCodegen
     return isEnabled ? options.fn(this) : options.inverse(this);
   });
 
+  // Check if any of the given values exist in the array
+  handlebars.registerHelper('includesAny', (arr: string[], ...values: unknown[]) => {
+    // Last argument is Handlebars options object, exclude it
+    const vals = values.slice(0, -1) as string[];
+    return Array.isArray(arr) && vals.some((v) => arr.includes(v));
+  });
+
   // Plop built-in helpers that we need to provide
   handlebars.registerHelper('pascalCase', (text: string) => {
     return text

@@ -7,6 +7,7 @@ export type HandlerAnswers = {
   name: string;
   singularName: string;
   endpointKey: string;
+  apiBaseUrl: string;
   operations: string[];
   chainTypes: boolean;
   chainQueryHook: boolean;
@@ -32,6 +33,15 @@ export function handlerPrompts() {
       type: 'input' as const,
       name: 'endpointKey',
       message: 'ApiEndpoints key (e.g., PRODUCTS):',
+    },
+    {
+      type: 'input' as const,
+      name: 'apiBaseUrl',
+      message: 'API base URL (e.g., /o/headless-marketplace/v1.0/products):',
+      validate: (input: string) => {
+        if (!input || input.trim().length === 0) return 'API base URL is required';
+        return true;
+      },
     },
     {
       type: 'checkbox' as const,
@@ -83,6 +93,14 @@ export function handlerActions(answers: HandlerAnswers, config: RqCodegenConfig)
   const pascalSingular = toPascalCase(singularName);
 
   const actions: GeneratorAction[] = [
+    {
+      type: 'endpoint-register',
+      data: {
+        endpointKey: answers.endpointKey,
+        apiBaseUrl: answers.apiBaseUrl,
+        operations,
+      },
+    },
     {
       type: 'add',
       path: `${config.paths.handlers}/{{camelCase name}}.ts`,

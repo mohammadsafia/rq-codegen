@@ -4,14 +4,15 @@ import Handlebars from 'handlebars';
 
 import type { RqCodegenConfig } from '../config/types.js';
 import { registerHelpers } from './helpers.js';
-import { barrelAppend, routeRegister, type ActionResult } from './actions.js';
+import { barrelAppend, routeRegister, endpointRegister, type ActionResult } from './actions.js';
 import { resolveTemplatePath } from './template-resolver.js';
 import { ensureDirectoryExists } from '../utils/fs.js';
 
 export type GeneratorAction =
   | AddAction
   | BarrelAppendAction
-  | RouteRegisterAction;
+  | RouteRegisterAction
+  | EndpointRegisterAction;
 
 export type AddAction = {
   type: 'add';
@@ -34,6 +35,15 @@ export type RouteRegisterAction = {
     layout: string;
     isProtected: boolean;
     routePath: string;
+  };
+};
+
+export type EndpointRegisterAction = {
+  type: 'endpoint-register';
+  data: {
+    endpointKey: string;
+    apiBaseUrl: string;
+    operations: string[];
   };
 };
 
@@ -118,6 +128,12 @@ export async function executeActions(
       case 'route-register': {
         const routeResults = routeRegister(config, action.data);
         results.push(...routeResults);
+        break;
+      }
+
+      case 'endpoint-register': {
+        const endpointResult = endpointRegister(config, action.data);
+        results.push(endpointResult);
         break;
       }
     }

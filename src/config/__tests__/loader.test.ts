@@ -170,6 +170,57 @@ describe('loadConfig', () => {
     expect(config.hooks.translation.import).toBe('useAppTranslation');
   });
 
+  it('loads config from rqgen.config.ts', async () => {
+    const testDir = trackDir(createTestDir());
+    fs.writeFileSync(
+      path.join(testDir, 'rqgen.config.ts'),
+      `const config = { srcDir: './app', features: { i18n: true } };\nexport default config;`,
+    );
+
+    const config = await loadConfig(testDir);
+    expect(config.srcDir).toBe('./app');
+    expect(config.features.i18n).toBe(true);
+    // Defaults preserved
+    expect(config.naming.dtoSuffixes.read).toBe('ForReadDto');
+  });
+
+  it('loads config from rqgen.config.ts with defineConfig pattern', async () => {
+    const testDir = trackDir(createTestDir());
+    fs.writeFileSync(
+      path.join(testDir, 'rqgen.config.ts'),
+      `function defineConfig<T>(config: T): T { return config; }\nexport default defineConfig({ srcDir: './custom', features: { toast: false } });`,
+    );
+
+    const config = await loadConfig(testDir);
+    expect(config.srcDir).toBe('./custom');
+    expect(config.features.toast).toBe(false);
+  });
+
+  it('prefers rqgen.config.ts over rqgen.config.mjs', async () => {
+    const testDir = trackDir(createTestDir());
+    fs.writeFileSync(
+      path.join(testDir, 'rqgen.config.ts'),
+      `export default { srcDir: './from-ts' };`,
+    );
+    fs.writeFileSync(
+      path.join(testDir, 'rqgen.config.mjs'),
+      `export default { srcDir: './from-mjs' };`,
+    );
+
+    const config = await loadConfig(testDir);
+    expect(config.srcDir).toBe('./from-ts');
+  });
+
+  it('throws readable error for invalid TypeScript config', async () => {
+    const testDir = trackDir(createTestDir());
+    fs.writeFileSync(
+      path.join(testDir, 'rqgen.config.ts'),
+      `export default (() => { throw new Error('compile error'); })();`,
+    );
+
+    await expect(loadConfig(testDir)).rejects.toThrow('Failed to load TypeScript config');
+  });
+
   it('auto-detects aliases from tsconfig.json', async () => {
     const testDir = trackDir(createTestDir());
     fs.writeFileSync(

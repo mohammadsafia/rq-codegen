@@ -1,9 +1,12 @@
 import { ApiEndpoints, HttpClient } from '{{configAlias "api"}}/config';
 
+{{#if (includesAny operations "list" "details" "create" "update")}}
 import type {
-  {{pascalCase name}}{{dtoSuffix "read"}},
 {{#if (includes operations "list")}}
   {{pascalCase name}}{{dtoSuffix "listResponse"}},
+{{/if}}
+{{#if (includesAny operations "details" "create" "update")}}
+  {{pascalCase name}}{{dtoSuffix "read"}},
 {{/if}}
 {{#if (includes operations "create")}}
   {{pascalCase name}}{{dtoSuffix "create"}},
@@ -13,6 +16,7 @@ import type {
 {{/if}}
 } from '{{configAlias "types"}}';
 
+{{/if}}
 const URL = ApiEndpoints.{{constantCase endpointKey}};
 
 {{#if (includes operations "list")}}

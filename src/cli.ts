@@ -11,7 +11,7 @@ export function createCli(): Command {
     .description(
       'Config-driven code generator for React + TypeScript + React Query projects',
     )
-    .version('0.1.0');
+    .version('0.1.1');
 
   program
     .command('init')
