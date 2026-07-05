@@ -1,19 +1,15 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { validateName } from '../utils/validation.js';
 
 export type ValidationAnswers = {
   name: string;
 };
 
-export function validationPrompts() {
+export function validationFields(): GeneratorField[] {
   return [
-    {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Schema name (e.g., communitySettings, eventCreate):',
-      validate: validateName,
-    },
+    { name: 'name', type: 'input', message: 'Schema name (e.g., communitySettings, eventCreate):', required: true, validate: validateName },
   ];
 }
 

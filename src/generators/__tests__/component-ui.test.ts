@@ -1,26 +1,20 @@
 import { describe, it, expect } from 'vitest';
 
-import { componentUiPrompts, componentUiActions } from '../component-ui.js';
+import { componentUiFields, componentUiActions, type ComponentUiAnswers } from '../component-ui.js';
 import { DEFAULT_CONFIG } from '../../config/defaults.js';
 
-describe('componentUiPrompts', () => {
-  it('returns prompts array', () => {
-    const prompts = componentUiPrompts();
-    expect(Array.isArray(prompts)).toBe(true);
-  });
-
-  it('has name prompt', () => {
-    const prompts = componentUiPrompts();
-    const namePrompt = prompts.find((p) => p.name === 'name');
-    expect(namePrompt).toBeDefined();
-    expect(namePrompt!.type).toBe('input');
-    expect(namePrompt!.validate).toBeDefined();
+describe('componentUiFields', () => {
+  it('returns a single required name field', () => {
+    const fields = componentUiFields();
+    expect(fields).toHaveLength(1);
+    expect(fields[0]).toMatchObject({ name: 'name', type: 'input', required: true });
   });
 });
 
 describe('componentUiActions', () => {
   it('generates 3 actions (component, index, barrel)', () => {
-    const actions = componentUiActions({ name: 'StatusIndicator' }, DEFAULT_CONFIG);
+    const answers: ComponentUiAnswers = { name: 'StatusIndicator' };
+    const actions = componentUiActions(answers, DEFAULT_CONFIG);
     expect(actions).toHaveLength(3);
   });
 

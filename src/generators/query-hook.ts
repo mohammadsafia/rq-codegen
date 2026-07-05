@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { validateName } from '../utils/validation.js';
 
 export type QueryHookAnswers = {
@@ -10,39 +11,13 @@ export type QueryHookAnswers = {
   isPaginated?: boolean;
 };
 
-export function queryHookPrompts() {
+export function queryHookFields(): GeneratorField[] {
   return [
-    {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Hook name suffix (e.g., CommunityList, ProductDetails):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'handlerName',
-      message: 'Handler name to import (e.g., Community):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'handlerKey',
-      message: 'Handler key (e.g., list, details):',
-      default: 'list',
-    },
-    {
-      type: 'confirm' as const,
-      name: 'isDetailsQuery',
-      message: 'Is this a details/by-id query (takes an id parameter)?',
-      default: false,
-    },
-    {
-      type: 'confirm' as const,
-      name: 'isPaginated',
-      message: 'Is this a paginated list query?',
-      default: false,
-      when: (answers: QueryHookAnswers) => !answers.isDetailsQuery,
-    },
+    { name: 'name', type: 'input', message: 'Hook name suffix (e.g., CommunityList, ProductDetails):', required: true, validate: validateName },
+    { name: 'handlerName', type: 'input', message: 'Handler name to import (e.g., Community):', required: true, validate: validateName },
+    { name: 'handlerKey', type: 'input', message: 'Handler key (e.g., list, details):', default: 'list' },
+    { name: 'isDetailsQuery', type: 'confirm', message: 'Is this a details/by-id query (takes an id parameter)?', default: false },
+    { name: 'isPaginated', type: 'confirm', message: 'Is this a paginated list query?', default: false, when: (a) => !a.isDetailsQuery },
   ];
 }
 

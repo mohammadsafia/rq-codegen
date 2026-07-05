@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { validateName } from '../utils/validation.js';
 
 export type TypesDtoAnswers = {
@@ -9,32 +10,12 @@ export type TypesDtoAnswers = {
   includeParamsDto: boolean;
 };
 
-export function typesDtoPrompts() {
+export function typesDtoFields(): GeneratorField[] {
   return [
-    {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Entity name (e.g., Community, Event):',
-      validate: validateName,
-    },
-    {
-      type: 'confirm' as const,
-      name: 'includeCreateDto',
-      message: 'Include ForCreateDto?',
-      default: true,
-    },
-    {
-      type: 'confirm' as const,
-      name: 'includeUpdateDto',
-      message: 'Include ForUpdateDto?',
-      default: true,
-    },
-    {
-      type: 'confirm' as const,
-      name: 'includeParamsDto',
-      message: 'Include ParamsDto?',
-      default: true,
-    },
+    { name: 'name', type: 'input', message: 'Entity name (e.g., Community, Event):', required: true, validate: validateName },
+    { name: 'includeCreateDto', type: 'confirm', message: 'Include ForCreateDto?', default: true },
+    { name: 'includeUpdateDto', type: 'confirm', message: 'Include ForUpdateDto?', default: true },
+    { name: 'includeParamsDto', type: 'confirm', message: 'Include ParamsDto?', default: true },
   ];
 }
 

@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
-import { validationPrompts, validationActions } from '../validation.js';
+import { validationFields, validationActions } from '../validation.js';
 import { DEFAULT_CONFIG } from '../../config/defaults.js';
 
-describe('validationPrompts', () => {
-  it('returns prompts array with name input', () => {
-    const prompts = validationPrompts();
-    expect(Array.isArray(prompts)).toBe(true);
-    expect(prompts.find((p) => p.name === 'name')).toBeDefined();
+describe('validationFields', () => {
+  it('returns a single required name field', () => {
+    const fields = validationFields();
+    expect(fields[0]).toMatchObject({ name: 'name', type: 'input', required: true });
   });
 });
 

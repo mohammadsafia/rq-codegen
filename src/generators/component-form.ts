@@ -1,19 +1,15 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { validateName } from '../utils/validation.js';
 
 export type ComponentFormAnswers = {
   name: string;
 };
 
-export function componentFormPrompts() {
+export function componentFormFields(): GeneratorField[] {
   return [
-    {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Field name (e.g., DateRange, Slider):',
-      validate: validateName,
-    },
+    { name: 'name', type: 'input', message: 'Field name (e.g., DateRange, Slider):', required: true, validate: validateName },
   ];
 }
 

@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { validateName } from '../utils/validation.js';
 
 export type ComponentSharedAnswers = {
@@ -8,20 +9,10 @@ export type ComponentSharedAnswers = {
   subComponents?: string[];
 };
 
-export function componentSharedPrompts() {
+export function componentSharedFields(): GeneratorField[] {
   return [
-    {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Component name (e.g., InfoCard):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'subComponentsRaw',
-      message: 'Sub-component names (comma-separated, e.g., Header,Body,Footer):',
-      default: 'Header,Body,Footer',
-    },
+    { name: 'name', type: 'input', message: 'Component name (e.g., InfoCard):', required: true, validate: validateName },
+    { name: 'subComponentsRaw', type: 'input', message: 'Sub-component names (comma-separated, e.g., Header,Body,Footer):', default: 'Header,Body,Footer' },
   ];
 }
 

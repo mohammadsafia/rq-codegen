@@ -1,19 +1,15 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { validateName } from '../utils/validation.js';
 
 export type ComponentUiAnswers = {
   name: string;
 };
 
-export function componentUiPrompts() {
+export function componentUiFields(): GeneratorField[] {
   return [
-    {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Component name (e.g., StatusIndicator):',
-      validate: validateName,
-    },
+    { name: 'name', type: 'input', message: 'Component name (e.g., StatusIndicator):', required: true, validate: validateName },
   ];
 }
 

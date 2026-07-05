@@ -1,18 +1,19 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
 import type { GeneratorField } from '../core/fields.js';
+import { fieldsToPrompts } from '../core/fields.js';
 
-import { componentUiPrompts, componentUiActions } from './component-ui.js';
-import { componentSharedPrompts, componentSharedActions, preprocessComponentSharedAnswers } from './component-shared.js';
-import { componentFormPrompts, componentFormActions } from './component-form.js';
+import { componentUiFields, componentUiActions } from './component-ui.js';
+import { componentSharedFields, componentSharedActions, preprocessComponentSharedAnswers } from './component-shared.js';
+import { componentFormFields, componentFormActions } from './component-form.js';
 import { pagePrompts, pageActions, preprocessPageAnswers } from './page.js';
 import { viewPrompts, viewActions, preprocessViewAnswers } from './view.js';
 import { handlerPrompts, handlerActions } from './handler.js';
-import { queryHookPrompts, queryHookActions } from './query-hook.js';
-import { mutationHookPrompts, mutationHookActions } from './mutation-hook.js';
-import { typesDtoPrompts, typesDtoActions } from './types-dto.js';
-import { sharedHookPrompts, sharedHookActions } from './shared-hook.js';
-import { validationPrompts, validationActions } from './validation.js';
+import { queryHookFields, queryHookActions } from './query-hook.js';
+import { mutationHookFields, mutationHookActions } from './mutation-hook.js';
+import { typesDtoFields, typesDtoActions } from './types-dto.js';
+import { sharedHookFields, sharedHookActions } from './shared-hook.js';
+import { validationFields, validationActions } from './validation.js';
 import { featurePrompts, featureActions } from './feature.js';
 
 export type GeneratorDefinition = {
@@ -30,20 +31,23 @@ export function getGenerators(_config: RqCodegenConfig): GeneratorDefinition[] {
     {
       name: 'component-ui',
       description: 'CVA-based UI component (shadcn/ui style)',
-      prompts: () => componentUiPrompts(),
+      fields: () => componentUiFields(),
+      prompts: () => fieldsToPrompts(componentUiFields()),
       actions: (answers, cfg) => componentUiActions(answers as never, cfg),
     },
     {
       name: 'component-shared',
       description: 'Compound shared component',
-      prompts: () => componentSharedPrompts(),
+      fields: () => componentSharedFields(),
+      prompts: () => fieldsToPrompts(componentSharedFields()),
       actions: (answers, cfg) => componentSharedActions(answers as never, cfg),
       preprocess: (answers) => preprocessComponentSharedAnswers(answers as never),
     },
     {
       name: 'component-form',
       description: 'React Hook Form component (useController-based)',
-      prompts: () => componentFormPrompts(),
+      fields: () => componentFormFields(),
+      prompts: () => fieldsToPrompts(componentFormFields()),
       actions: (answers, cfg) => componentFormActions(answers as never, cfg),
     },
     {
@@ -69,31 +73,36 @@ export function getGenerators(_config: RqCodegenConfig): GeneratorDefinition[] {
     {
       name: 'query-hook',
       description: 'React Query hook',
-      prompts: () => queryHookPrompts(),
+      fields: () => queryHookFields(),
+      prompts: () => fieldsToPrompts(queryHookFields()),
       actions: (answers, cfg) => queryHookActions(answers as never, cfg),
     },
     {
       name: 'mutation-hook',
       description: 'React Query mutation hook',
-      prompts: () => mutationHookPrompts(),
+      fields: () => mutationHookFields(),
+      prompts: () => fieldsToPrompts(mutationHookFields()),
       actions: (answers, cfg) => mutationHookActions(answers as never, cfg),
     },
     {
       name: 'types-dto',
       description: 'DTO type definitions',
-      prompts: () => typesDtoPrompts(),
+      fields: () => typesDtoFields(),
+      prompts: () => fieldsToPrompts(typesDtoFields()),
       actions: (answers, cfg) => typesDtoActions(answers as never, cfg),
     },
     {
       name: 'shared-hook',
       description: 'Custom utility hook',
-      prompts: () => sharedHookPrompts(),
+      fields: () => sharedHookFields(),
+      prompts: () => fieldsToPrompts(sharedHookFields()),
       actions: (answers, cfg) => sharedHookActions(answers as never, cfg),
     },
     {
       name: 'validation',
       description: 'Zod validation schema',
-      prompts: () => validationPrompts(),
+      fields: () => validationFields(),
+      prompts: () => fieldsToPrompts(validationFields()),
       actions: (answers, cfg) => validationActions(answers as never, cfg),
     },
     {
