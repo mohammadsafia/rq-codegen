@@ -106,3 +106,66 @@ export function fieldsToOptions(fields: GeneratorField[]): CliOption[] {
     }
   });
 }
+
+export class MissingRequiredFieldsError extends Error {
+  fields: string[];
+  constructor(fields: string[]) {
+    super(
+      `Missing required option(s): ${fields.map((f) => `--${kebab(f)}`).join(', ')}.\n` +
+        `Provide them as flags, or drop --yes to answer interactively.`,
+    );
+    this.name = 'MissingRequiredFieldsError';
+    this.fields = fields;
+  }
+}
+
+export type PromptRunner = (prompts: unknown[]) => Promise<Record<string, unknown>>;
+
+function coerce(field: GeneratorField, value: unknown): unknown {
+  if (field.type === 'checkbox' && typeof value === 'string') {
+    return value.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  return value;
+}
+
+export async function resolveAnswers(
+  fields: GeneratorField[],
+  provided: Record<string, unknown>,
+  opts: { interactive: boolean; prompt: PromptRunner },
+): Promise<Record<string, unknown>> {
+  const answers: Record<string, unknown> = {};
+  const unresolved: GeneratorField[] = [];
+
+  for (const field of fields) {
+    if (field.when && !field.when(answers)) continue;
+    if (provided[field.name] !== undefined) {
+      answers[field.name] = coerce(field, provided[field.name]);
+    } else {
+      unresolved.push(field);
+    }
+  }
+
+  if (unresolved.length === 0) return answers;
+
+  if (opts.interactive) {
+    const results = await opts.prompt(fieldsToPrompts(unresolved));
+    return { ...answers, ...results };
+  }
+
+  const missing: string[] = [];
+  for (const field of unresolved) {
+    if (field.when && !field.when(answers)) continue;
+    if (field.type === 'confirm') {
+      answers[field.name] = field.default;
+    } else if ((field.type === 'input' || field.type === 'list') && field.default !== undefined) {
+      answers[field.name] = field.default;
+    } else if (field.type === 'checkbox') {
+      answers[field.name] = [];
+    } else if (field.type === 'input' && field.required) {
+      missing.push(field.name);
+    }
+  }
+
+  if (missing.length > 0) throw new MissingRequiredFieldsError(missing);
+  return answers;
+}

@@ -79,3 +79,68 @@ describe('fieldsToOptions', () => {
     expect(opt.isBoolean).toBe(false);
   });
 });
+
+import { resolveAnswers, MissingRequiredFieldsError, type GeneratorField as GF } from '../fields.js';
+
+const noPrompt = async () => ({});
+
+describe('resolveAnswers (non-interactive)', () => {
+  it('uses provided flags and coerces checkbox CSV to array', async () => {
+    const fields: GF[] = [
+      { name: 'name', type: 'input', message: '', required: true },
+      { name: 'operations', type: 'checkbox', message: '', choices: [] },
+    ];
+    const answers = await resolveAnswers(
+      fields,
+      { name: 'Product', operations: 'list,details' },
+      { interactive: false, prompt: noPrompt },
+    );
+    expect(answers).toEqual({ name: 'Product', operations: ['list', 'details'] });
+  });
+
+  it('applies defaults for unprovided fields', async () => {
+    const fields: GF[] = [
+      { name: 'name', type: 'input', message: '', required: true },
+      { name: 'includeParamsDto', type: 'confirm', message: '', default: true },
+    ];
+    const answers = await resolveAnswers(
+      fields,
+      { name: 'Product' },
+      { interactive: false, prompt: noPrompt },
+    );
+    expect(answers).toEqual({ name: 'Product', includeParamsDto: true });
+  });
+
+  it('throws MissingRequiredFieldsError when a required input is absent', async () => {
+    const fields: GF[] = [{ name: 'name', type: 'input', message: '', required: true }];
+    await expect(
+      resolveAnswers(fields, {}, { interactive: false, prompt: noPrompt }),
+    ).rejects.toBeInstanceOf(MissingRequiredFieldsError);
+  });
+
+  it('skips fields whose when() is false', async () => {
+    const fields: GF[] = [
+      { name: 'chainQueryHook', type: 'confirm', message: '', default: false },
+      { name: 'isPaginated', type: 'confirm', message: '', default: false, when: (a) => a.chainQueryHook === true },
+    ];
+    const answers = await resolveAnswers(fields, {}, { interactive: false, prompt: noPrompt });
+    expect(answers).toEqual({ chainQueryHook: false });
+    expect('isPaginated' in answers).toBe(false);
+  });
+
+  it('prompts only for unresolved fields in interactive mode', async () => {
+    const fields: GF[] = [
+      { name: 'name', type: 'input', message: '', required: true },
+      { name: 'singularName', type: 'input', message: '', required: true },
+    ];
+    const seen: unknown[] = [];
+    const prompt = async (prompts: unknown[]) => {
+      seen.push(...(prompts as unknown[]));
+      return { singularName: 'product' };
+    };
+    const answers = await resolveAnswers(fields, { name: 'Products' }, { interactive: true, prompt });
+    expect(answers).toEqual({ name: 'Products', singularName: 'product' });
+    expect(seen).toHaveLength(1);
+    expect((seen[0] as Record<string, unknown>).name).toBe('singularName');
+  });
+});
