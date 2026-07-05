@@ -1,26 +1,31 @@
 import { describe, it, expect } from 'vitest';
 
-import { featurePrompts, featureActions, type FeatureAnswers } from '../feature.js';
+import { featureFields, featureActions, type FeatureAnswers } from '../feature.js';
 import { DEFAULT_CONFIG } from '../../config/defaults.js';
 
-describe('featurePrompts', () => {
-  it('returns prompts array', () => {
-    const prompts = featurePrompts();
-    expect(Array.isArray(prompts)).toBe(true);
+describe('featureFields', () => {
+  it('returns fields array', () => {
+    const fields = featureFields();
+    expect(Array.isArray(fields)).toBe(true);
   });
 
-  it('has name, singularName, endpointKey prompts', () => {
-    const prompts = featurePrompts();
-    expect(prompts.find((p) => p.name === 'name')).toBeDefined();
-    expect(prompts.find((p) => p.name === 'singularName')).toBeDefined();
-    expect(prompts.find((p) => p.name === 'endpointKey')).toBeDefined();
+  it('has name, singularName, endpointKey fields', () => {
+    const fields = featureFields();
+    expect(fields.find((f) => f.name === 'name')).toBeDefined();
+    expect(fields.find((f) => f.name === 'singularName')).toBeDefined();
+    expect(fields.find((f) => f.name === 'endpointKey')).toBeDefined();
   });
 
   it('has artifacts checkbox', () => {
-    const prompts = featurePrompts();
-    const artifacts = prompts.find((p) => p.name === 'artifacts');
+    const fields = featureFields();
+    const artifacts = fields.find((f) => f.name === 'artifacts');
     expect(artifacts).toBeDefined();
     expect(artifacts!.type).toBe('checkbox');
+  });
+
+  it('has isPaginated field', () => {
+    const fields = featureFields();
+    expect(fields.find((f) => f.name === 'isPaginated')).toBeDefined();
   });
 });
 

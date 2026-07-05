@@ -6,15 +6,15 @@ import { fieldsToPrompts } from '../core/fields.js';
 import { componentUiFields, componentUiActions } from './component-ui.js';
 import { componentSharedFields, componentSharedActions, preprocessComponentSharedAnswers } from './component-shared.js';
 import { componentFormFields, componentFormActions } from './component-form.js';
-import { pagePrompts, pageActions, preprocessPageAnswers } from './page.js';
-import { viewPrompts, viewActions, preprocessViewAnswers } from './view.js';
-import { handlerPrompts, handlerActions } from './handler.js';
+import { pageFields, pageActions, preprocessPageAnswers } from './page.js';
+import { viewFields, viewActions, preprocessViewAnswers } from './view.js';
+import { handlerFields, handlerActions } from './handler.js';
 import { queryHookFields, queryHookActions } from './query-hook.js';
 import { mutationHookFields, mutationHookActions } from './mutation-hook.js';
 import { typesDtoFields, typesDtoActions } from './types-dto.js';
 import { sharedHookFields, sharedHookActions } from './shared-hook.js';
 import { validationFields, validationActions } from './validation.js';
-import { featurePrompts, featureActions } from './feature.js';
+import { featureFields, featureActions } from './feature.js';
 
 export type GeneratorDefinition = {
   name: string;
@@ -53,21 +53,24 @@ export function getGenerators(_config: RqCodegenConfig): GeneratorDefinition[] {
     {
       name: 'page',
       description: 'Route-level page component',
-      prompts: (cfg) => pagePrompts(cfg),
+      fields: (cfg) => pageFields(cfg),
+      prompts: (cfg) => fieldsToPrompts(pageFields(cfg)),
       actions: (answers, cfg) => pageActions(answers as never, cfg),
       preprocess: (answers) => preprocessPageAnswers(answers as never),
     },
     {
       name: 'view',
       description: 'Feature view component',
-      prompts: (cfg) => viewPrompts(cfg),
+      fields: (cfg) => viewFields(cfg),
+      prompts: (cfg) => fieldsToPrompts(viewFields(cfg)),
       actions: (answers, cfg) => viewActions(answers as never, cfg),
       preprocess: (answers) => preprocessViewAnswers(answers as never),
     },
     {
       name: 'handler',
       description: 'API handler (+ types + hooks)',
-      prompts: () => handlerPrompts(),
+      fields: () => handlerFields(),
+      prompts: () => fieldsToPrompts(handlerFields()),
       actions: (answers, cfg) => handlerActions(answers as never, cfg),
     },
     {
@@ -108,7 +111,8 @@ export function getGenerators(_config: RqCodegenConfig): GeneratorDefinition[] {
     {
       name: 'feature',
       description: 'Full feature scaffold (handler + types + hooks + view + page)',
-      prompts: () => featurePrompts(),
+      fields: () => featureFields(),
+      prompts: () => fieldsToPrompts(featureFields()),
       actions: (answers, cfg) => featureActions(answers as never, cfg),
     },
   ];

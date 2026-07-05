@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { toPascalCase } from '../utils/string.js';
 import { validateName } from '../utils/validation.js';
 
@@ -15,38 +16,19 @@ export type HandlerAnswers = {
   chainMutationHook: boolean;
 };
 
-export function handlerPrompts() {
+export function handlerFields(): GeneratorField[] {
   return [
+    { name: 'name', type: 'input', message: 'Entity name (e.g., products):', required: true, validate: validateName },
+    { name: 'singularName', type: 'input', flag: 'singular', message: 'Singular entity name for mutations (e.g., product):', required: true, validate: validateName },
+    { name: 'endpointKey', type: 'input', flag: 'endpoint', message: 'ApiEndpoints key (e.g., PRODUCTS):', required: true },
     {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Entity name (e.g., products):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'singularName',
-      message: 'Singular entity name for mutations (e.g., product):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'endpointKey',
-      message: 'ApiEndpoints key (e.g., PRODUCTS):',
-    },
-    {
-      type: 'input' as const,
-      name: 'apiBaseUrl',
+      name: 'apiBaseUrl', type: 'input', flag: 'base-url',
       message: 'API base URL (e.g., /o/headless-marketplace/v1.0/products):',
-      validate: (input: string) => {
-        if (!input || input.trim().length === 0) return 'API base URL is required';
-        return true;
-      },
+      required: true,
+      validate: (input: string) => (input && input.trim().length > 0 ? true : 'API base URL is required'),
     },
     {
-      type: 'checkbox' as const,
-      name: 'operations',
-      message: 'Which operations?',
+      name: 'operations', type: 'checkbox', message: 'Which operations?',
       choices: [
         { name: 'list', value: 'list', checked: true },
         { name: 'details', value: 'details', checked: true },
@@ -55,34 +37,10 @@ export function handlerPrompts() {
         { name: 'delete', value: 'delete' },
       ],
     },
-    {
-      type: 'confirm' as const,
-      name: 'chainTypes',
-      message: 'Also generate DTO types?',
-      default: true,
-    },
-    {
-      type: 'confirm' as const,
-      name: 'chainQueryHook',
-      message: 'Also generate query hook(s)?',
-      default: true,
-    },
-    {
-      type: 'confirm' as const,
-      name: 'isPaginated',
-      message: 'Is the list endpoint paginated?',
-      default: false,
-      when: (answers: HandlerAnswers) => {
-        const ops = answers.operations;
-        return !!answers.chainQueryHook && ops?.includes('list');
-      },
-    },
-    {
-      type: 'confirm' as const,
-      name: 'chainMutationHook',
-      message: 'Also generate mutation hook(s)?',
-      default: true,
-    },
+    { name: 'chainTypes', type: 'confirm', message: 'Also generate DTO types?', default: true },
+    { name: 'chainQueryHook', type: 'confirm', message: 'Also generate query hook(s)?', default: true },
+    { name: 'isPaginated', type: 'confirm', message: 'Is the list endpoint paginated?', default: false, when: (a) => !!a.chainQueryHook && Array.isArray(a.operations) && (a.operations as string[]).includes('list') },
+    { name: 'chainMutationHook', type: 'confirm', message: 'Also generate mutation hook(s)?', default: true },
   ];
 }
 

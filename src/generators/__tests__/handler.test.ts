@@ -1,49 +1,28 @@
 import { describe, it, expect } from 'vitest';
 
-import { handlerPrompts, handlerActions, type HandlerAnswers } from '../handler.js';
+import { handlerFields, handlerActions, type HandlerAnswers } from '../handler.js';
 import { DEFAULT_CONFIG } from '../../config/defaults.js';
 
-describe('handlerPrompts', () => {
-  it('returns 9 prompts', () => {
-    const prompts = handlerPrompts();
-    expect(prompts).toHaveLength(9);
+describe('handlerFields', () => {
+  it('returns 9 fields', () => {
+    expect(handlerFields()).toHaveLength(9);
   });
-
-  it('has name, singularName, endpointKey prompts', () => {
-    const prompts = handlerPrompts();
-    expect(prompts.find((p) => p.name === 'name')).toBeDefined();
-    expect(prompts.find((p) => p.name === 'singularName')).toBeDefined();
-    expect(prompts.find((p) => p.name === 'endpointKey')).toBeDefined();
+  it('has name, singularName, endpointKey fields', () => {
+    const fields = handlerFields();
+    expect(fields.find((f) => f.name === 'name')).toBeDefined();
+    expect(fields.find((f) => f.name === 'singularName')).toBeDefined();
+    expect(fields.find((f) => f.name === 'endpointKey')).toBeDefined();
   });
-
-  it('has operations checkbox with 5 choices', () => {
-    const prompts = handlerPrompts();
-    const ops = prompts.find((p) => p.name === 'operations');
-    expect(ops).toBeDefined();
-    expect(ops!.type).toBe('checkbox');
+  it('operations is a checkbox with 5 choices', () => {
+    const ops = handlerFields().find((f) => f.name === 'operations');
+    expect(ops?.type).toBe('checkbox');
     expect((ops as { choices: unknown[] }).choices).toHaveLength(5);
   });
-
-  it('has conditional isPaginated prompt', () => {
-    const prompts = handlerPrompts();
-    const paginated = prompts.find((p) => p.name === 'isPaginated');
-    expect(paginated).toBeDefined();
-    expect(paginated!.type).toBe('confirm');
-    expect(typeof (paginated as { when: Function }).when).toBe('function');
-  });
-
-  it('isPaginated shows only when chainQueryHook and list selected', () => {
-    const prompts = handlerPrompts();
-    const paginated = prompts.find((p) => p.name === 'isPaginated') as { when: Function };
-
-    // Shows when both conditions true
-    expect(paginated.when({ chainQueryHook: true, operations: ['list'] })).toBe(true);
-
-    // Hidden when no list
-    expect(paginated.when({ chainQueryHook: true, operations: ['details'] })).toBe(false);
-
-    // Hidden when chainQueryHook false
-    expect(paginated.when({ chainQueryHook: false, operations: ['list'] })).toBe(false);
+  it('isPaginated has a when() gated on chainQueryHook + list', () => {
+    const p = handlerFields().find((f) => f.name === 'isPaginated') as { when: Function };
+    expect(p.when({ chainQueryHook: true, operations: ['list'] })).toBe(true);
+    expect(p.when({ chainQueryHook: true, operations: ['details'] })).toBe(false);
+    expect(p.when({ chainQueryHook: false, operations: ['list'] })).toBe(false);
   });
 });
 
