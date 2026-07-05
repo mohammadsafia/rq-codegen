@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { fieldsToPrompts, type GeneratorField } from '../fields.js';
+import { fieldsToOptions, fieldToFlagName } from '../fields.js';
 
 describe('fieldsToPrompts', () => {
   it('maps an input field to an inquirer input prompt', () => {
@@ -35,5 +36,46 @@ describe('fieldsToPrompts', () => {
     ];
     const prompts = fieldsToPrompts(fields) as Array<Record<string, unknown>>;
     expect(prompts[0].choices).toBe(choices);
+  });
+});
+
+describe('fieldToFlagName', () => {
+  it('kebab-cases the field name by default', () => {
+    expect(fieldToFlagName({ name: 'singularName', type: 'input', message: '' })).toBe('singular-name');
+    expect(fieldToFlagName({ name: 'isPaginated', type: 'confirm', message: '', default: false })).toBe('is-paginated');
+  });
+  it('honors an explicit flag override', () => {
+    expect(fieldToFlagName({ name: 'endpointKey', type: 'input', message: '', flag: 'endpoint' })).toBe('endpoint');
+  });
+});
+
+describe('fieldsToOptions', () => {
+  it('input -> value option', () => {
+    const [opt] = fieldsToOptions([{ name: 'name', type: 'input', message: 'Name:' }]);
+    expect(opt).toMatchObject({ flags: '--name <value>', isBoolean: false, isList: false, fieldName: 'name' });
+  });
+
+  it('confirm with default true -> negatable --no flag', () => {
+    const [opt] = fieldsToOptions([{ name: 'update', type: 'confirm', message: 'Update?', default: true, flag: 'update' }]);
+    expect(opt.flags).toBe('--no-update');
+    expect(opt.isBoolean).toBe(true);
+  });
+
+  it('confirm with default false -> plain boolean flag', () => {
+    const [opt] = fieldsToOptions([{ name: 'isPaginated', type: 'confirm', message: 'Paginated?', default: false }]);
+    expect(opt.flags).toBe('--is-paginated');
+    expect(opt.isBoolean).toBe(true);
+  });
+
+  it('checkbox -> csv list option', () => {
+    const [opt] = fieldsToOptions([{ name: 'operations', type: 'checkbox', message: 'Ops:', choices: [] }]);
+    expect(opt.flags).toBe('--operations <items>');
+    expect(opt.isList).toBe(true);
+  });
+
+  it('list -> value option', () => {
+    const [opt] = fieldsToOptions([{ name: 'category', type: 'list', message: 'Cat:', choices: () => [] }]);
+    expect(opt.flags).toBe('--category <value>');
+    expect(opt.isBoolean).toBe(false);
   });
 });

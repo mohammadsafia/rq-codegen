@@ -64,3 +64,45 @@ export function fieldsToPrompts(fields: GeneratorField[]): unknown[] {
     return prompt;
   });
 }
+
+export type CliOption = {
+  flags: string;
+  description: string;
+  isBoolean: boolean;
+  isList: boolean;
+  fieldName: string;
+};
+
+function kebab(text: string): string {
+  return text
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/[\s_]+/g, '-')
+    .toLowerCase();
+}
+
+export function fieldToFlagName(field: GeneratorField): string {
+  return field.flag ?? kebab(field.name);
+}
+
+export function fieldsToOptions(fields: GeneratorField[]): CliOption[] {
+  return fields.map((field) => {
+    const flagName = fieldToFlagName(field);
+    const base = { description: field.message, fieldName: field.name };
+
+    switch (field.type) {
+      case 'confirm':
+        // Default true is disabled via --no-x; default false is enabled via --x.
+        return {
+          ...base,
+          flags: field.default ? `--no-${flagName}` : `--${flagName}`,
+          isBoolean: true,
+          isList: false,
+        };
+      case 'checkbox':
+        return { ...base, flags: `--${flagName} <items>`, isBoolean: false, isList: true };
+      case 'input':
+      case 'list':
+        return { ...base, flags: `--${flagName} <value>`, isBoolean: false, isList: false };
+    }
+  });
+}
