@@ -64,3 +64,12 @@ describe('getGenerators', () => {
     expect(page?.preprocess).toBeDefined();
   });
 });
+
+describe('GeneratorDefinition.fields slot', () => {
+  it('every generator exposes a prompts function (unchanged)', () => {
+    const gens = getGenerators(DEFAULT_CONFIG);
+    for (const g of gens) {
+      expect(typeof g.prompts).toBe('function');
+    }
+  });
+});

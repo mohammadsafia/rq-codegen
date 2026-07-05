@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 
 import { componentUiPrompts, componentUiActions } from './component-ui.js';
 import { componentSharedPrompts, componentSharedActions, preprocessComponentSharedAnswers } from './component-shared.js';
@@ -17,6 +18,7 @@ import { featurePrompts, featureActions } from './feature.js';
 export type GeneratorDefinition = {
   name: string;
   description: string;
+  fields?: (config: RqCodegenConfig) => GeneratorField[];
   prompts: (config: RqCodegenConfig) => unknown[];
   actions: (answers: Record<string, unknown>, config: RqCodegenConfig) => GeneratorAction[];
   preprocess?: (answers: Record<string, unknown>) => Record<string, unknown>;
