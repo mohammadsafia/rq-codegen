@@ -4,7 +4,7 @@ import inquirer from 'inquirer';
 import { loadConfig } from '../config/loader.js';
 import { executeActions, resetHandlebars } from '../core/engine.js';
 import { getGenerators } from '../generators/index.js';
-import { resolveAnswers, MissingRequiredFieldsError } from '../core/fields.js';
+import { resolveAnswers, MissingRequiredFieldsError, InvalidFieldValueError } from '../core/fields.js';
 
 export async function runGenerate(
   generatorName?: string,
@@ -67,7 +67,7 @@ export async function runGenerate(
       prompt: (prompts) => inquirer.prompt(prompts as never),
     });
   } catch (error) {
-    if (error instanceof MissingRequiredFieldsError) {
+    if (error instanceof MissingRequiredFieldsError || error instanceof InvalidFieldValueError) {
       console.error(chalk.red(error.message));
       process.exit(1);
     }

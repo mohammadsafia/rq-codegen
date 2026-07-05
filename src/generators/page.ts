@@ -18,7 +18,7 @@ export function pageFields(config: RqCodegenConfig): GeneratorField[] {
   const fields: GeneratorField[] = [
     { name: 'name', type: 'input', message: 'Page name (e.g., Communities, EventDetails):', required: true, validate: validateName },
     {
-      name: 'category', type: 'list', message: 'Page category (folder):',
+      name: 'category', type: 'list', message: 'Page category (folder):', required: true,
       choices: () => {
         const dirs = getDirectories(`${config.srcDir}/${config.paths.pages}`);
         return [...dirs, '── Create new category ──'];

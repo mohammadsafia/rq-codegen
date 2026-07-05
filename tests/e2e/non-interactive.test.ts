@@ -52,4 +52,35 @@ describe('non-interactive generation', () => {
     const parsed = JSON.parse(stdout);
     expect(parsed.find((g: { name: string }) => g.name === 'types-dto')).toBeDefined();
   });
+
+  it('reports missing required flags using their alias names', () => {
+    const { status, stdout, stderr } = runCli(project.dir, ['handler', '--name', 'products', '--yes']);
+    expect(status).toBe(1);
+    const output = stdout + stderr;
+    expect(output).toContain('--singular');
+    expect(output).toContain('--endpoint');
+    expect(output).toContain('--base-url');
+  });
+
+  it('defaults checkbox artifacts to checked choices when generating a feature', () => {
+    const { status } = runCli(project.dir, [
+      'feature',
+      '--name',
+      'products',
+      '--singular',
+      'product',
+      '--endpoint',
+      'PRODUCTS',
+      '--yes',
+    ]);
+    expect(status).toBe(0);
+    expect(exists(project.dir, 'src/lib/hooks/queries/useProductsListQuery.ts')).toBe(true);
+    expect(exists(project.dir, 'src/lib/hooks/queries/useProductsDetailsQuery.ts')).toBe(true);
+  });
+
+  it('errors (exit 1) when --feature is missing for the view generator', () => {
+    const { status, stdout, stderr } = runCli(project.dir, ['view', '--name', 'Foo', '--yes']);
+    expect(status).toBe(1);
+    expect((stdout + stderr)).toContain('--feature');
+  });
 });

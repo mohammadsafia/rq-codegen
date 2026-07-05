@@ -31,6 +31,7 @@ export type ListField = BaseField & {
   type: 'list';
   choices: Choice[] | (() => string[]);
   default?: string;
+  required?: boolean;
 };
 
 export type GeneratorField = InputField | ConfirmField | CheckboxField | ListField;
@@ -109,13 +110,21 @@ export function fieldsToOptions(fields: GeneratorField[]): CliOption[] {
 
 export class MissingRequiredFieldsError extends Error {
   fields: string[];
-  constructor(fields: string[]) {
+  constructor(fields: GeneratorField[]) {
+    const flags = fields.map((f) => `--${fieldToFlagName(f)}`);
     super(
-      `Missing required option(s): ${fields.map((f) => `--${kebab(f)}`).join(', ')}.\n` +
+      `Missing required option(s): ${flags.join(', ')}.\n` +
         `Provide them as flags, or drop --yes to answer interactively.`,
     );
     this.name = 'MissingRequiredFieldsError';
-    this.fields = fields;
+    this.fields = fields.map((f) => f.name);
+  }
+}
+
+export class InvalidFieldValueError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidFieldValueError';
   }
 }
 
@@ -133,36 +142,56 @@ export async function resolveAnswers(
   provided: Record<string, unknown>,
   opts: { interactive: boolean; prompt: PromptRunner },
 ): Promise<Record<string, unknown>> {
-  const answers: Record<string, unknown> = {};
-  const unresolved: GeneratorField[] = [];
-
-  for (const field of fields) {
-    if (field.when && !field.when(answers)) continue;
-    if (provided[field.name] !== undefined) {
-      answers[field.name] = coerce(field, provided[field.name]);
-    } else {
-      unresolved.push(field);
-    }
-  }
-
-  if (unresolved.length === 0) return answers;
-
   if (opts.interactive) {
+    const answers: Record<string, unknown> = {};
+    const unresolved: GeneratorField[] = [];
+    for (const field of fields) {
+      if (field.when && !field.when(answers)) continue;
+      if (provided[field.name] !== undefined) {
+        answers[field.name] = coerce(field, provided[field.name]);
+      } else {
+        unresolved.push(field);
+      }
+    }
+    if (unresolved.length === 0) return answers;
     const results = await opts.prompt(fieldsToPrompts(unresolved));
     return { ...answers, ...results };
   }
 
-  const missing: string[] = [];
-  for (const field of unresolved) {
+  // Non-interactive: single ordered pass; defaults applied inline so later
+  // `when` predicates see them.
+  const answers: Record<string, unknown> = {};
+  const missing: GeneratorField[] = [];
+  for (const field of fields) {
     if (field.when && !field.when(answers)) continue;
-    if (field.type === 'confirm') {
-      answers[field.name] = field.default;
-    } else if ((field.type === 'input' || field.type === 'list') && field.default !== undefined) {
-      answers[field.name] = field.default;
-    } else if (field.type === 'checkbox') {
-      answers[field.name] = [];
-    } else if (field.type === 'input' && field.required) {
-      missing.push(field.name);
+
+    if (provided[field.name] !== undefined) {
+      const value = coerce(field, provided[field.name]);
+      if (field.type === 'input' && field.validate && typeof value === 'string') {
+        const result = field.validate(value);
+        if (result !== true) {
+          throw new InvalidFieldValueError(`Invalid --${fieldToFlagName(field)}: ${result}`);
+        }
+      }
+      answers[field.name] = value;
+      continue;
+    }
+
+    switch (field.type) {
+      case 'confirm':
+        answers[field.name] = field.default;
+        break;
+      case 'checkbox':
+        answers[field.name] = field.choices.filter((c) => c.checked).map((c) => c.value);
+        break;
+      case 'input':
+      case 'list':
+        if (field.default !== undefined) {
+          answers[field.name] = field.default;
+        } else if (field.required) {
+          missing.push(field);
+        }
+        break;
     }
   }
 

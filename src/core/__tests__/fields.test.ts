@@ -80,7 +80,12 @@ describe('fieldsToOptions', () => {
   });
 });
 
-import { resolveAnswers, MissingRequiredFieldsError, type GeneratorField as GF } from '../fields.js';
+import {
+  resolveAnswers,
+  MissingRequiredFieldsError,
+  InvalidFieldValueError,
+  type GeneratorField as GF,
+} from '../fields.js';
 
 const noPrompt = async () => ({});
 
@@ -142,5 +147,61 @@ describe('resolveAnswers (non-interactive)', () => {
     expect(answers).toEqual({ name: 'Products', singularName: 'product' });
     expect(seen).toHaveLength(1);
     expect((seen[0] as Record<string, unknown>).name).toBe('singularName');
+  });
+
+  it('derives checkbox defaults from checked choices when unprovided', async () => {
+    const fields: GF[] = [
+      {
+        name: 'artifacts',
+        type: 'checkbox',
+        message: '',
+        choices: [
+          { name: 'a', value: 'a', checked: true },
+          { name: 'b', value: 'b' },
+        ],
+      },
+    ];
+    const answers = await resolveAnswers(fields, {}, { interactive: false, prompt: noPrompt });
+    expect(answers.artifacts).toEqual(['a']);
+  });
+
+  it('uses alias flag names in MissingRequiredFieldsError message', async () => {
+    const fields: GF[] = [
+      { name: 'endpointKey', flag: 'endpoint', type: 'input', required: true, message: '' },
+    ];
+    let caught: unknown;
+    try {
+      await resolveAnswers(fields, {}, { interactive: false, prompt: noPrompt });
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(MissingRequiredFieldsError);
+    const message = (caught as Error).message;
+    expect(message).toContain('--endpoint');
+    expect(message).not.toContain('--endpoint-key');
+  });
+
+  it('throws MissingRequiredFieldsError when a required list has no default', async () => {
+    const fields: GF[] = [
+      { name: 'feature', type: 'list', required: true, choices: () => [], message: '' },
+    ];
+    await expect(
+      resolveAnswers(fields, {}, { interactive: false, prompt: noPrompt }),
+    ).rejects.toBeInstanceOf(MissingRequiredFieldsError);
+  });
+
+  it('validates provided input values and throws InvalidFieldValueError', async () => {
+    const fields: GF[] = [
+      {
+        name: 'name',
+        type: 'input',
+        required: true,
+        message: '',
+        validate: (v: string) => (v === 'bad' ? 'no spaces' : true),
+      },
+    ];
+    await expect(
+      resolveAnswers(fields, { name: 'bad' }, { interactive: false, prompt: noPrompt }),
+    ).rejects.toBeInstanceOf(InvalidFieldValueError);
   });
 });

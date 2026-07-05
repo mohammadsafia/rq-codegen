@@ -13,7 +13,7 @@ export type ViewAnswers = {
 export function viewFields(config: RqCodegenConfig): GeneratorField[] {
   return [
     {
-      name: 'feature', type: 'list', message: 'Feature (parent folder):',
+      name: 'feature', type: 'list', message: 'Feature (parent folder):', required: true,
       choices: () => {
         const dirs = getDirectories(`${config.srcDir}/${config.paths.views}`);
         return [...dirs, '── Create new feature ──'];
