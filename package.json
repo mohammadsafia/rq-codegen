@@ -26,6 +26,7 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "npm run build && vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
