@@ -22,7 +22,7 @@ export async function runGenerate(
   resetHandlebars();
   const generators = getGenerators(config);
 
-  const nonInteractive = cliOptions.yes === true;
+  const nonInteractive = cliOptions.yes === true && cliOptions.interactive !== true;
 
   if (!generatorName) {
     if (nonInteractive) {

@@ -34,13 +34,27 @@ function readVersion(): string {
   }
 }
 
-/** Map camelCased commander opts back to field names (handles `flag` overrides). */
-function mapOptsToFieldNames(opts: Record<string, unknown>, fields: GeneratorField[]): Record<string, unknown> {
+/**
+ * Map camelCased commander opts back to field names (handles `flag` overrides).
+ * Only forwards options the user actually typed on the CLI — commander
+ * pre-populates negatable `--no-x` confirm defaults with `true` even when
+ * unspecified, so gating on the option-value source is required to avoid
+ * silently skipping their interactive prompts.
+ */
+function mapOptsToFieldNames(
+  opts: Record<string, unknown>,
+  fields: GeneratorField[],
+  command: Command,
+): Record<string, unknown> {
   const camel = (s: string) => s.replace(/-(.)/g, (_, c: string) => c.toUpperCase());
-  const result: Record<string, unknown> = { yes: opts.yes };
+  const result: Record<string, unknown> = {};
+  if (command.getOptionValueSource('yes') === 'cli') result.yes = opts.yes;
+  if (command.getOptionValueSource('interactive') === 'cli') result.interactive = opts.interactive;
   for (const field of fields) {
     const optKey = camel(fieldToFlagName(field));
-    if (opts[optKey] !== undefined) result[field.name] = opts[optKey];
+    if (command.getOptionValueSource(optKey) === 'cli') {
+      result[field.name] = opts[optKey];
+    }
   }
   return result;
 }
@@ -83,8 +97,8 @@ export function createCli(): Command {
     }
     cmd.option('-y, --yes', 'Run non-interactively using flags + defaults');
     cmd.option('-i, --interactive', 'Force interactive prompts for any unspecified fields');
-    cmd.action(async (opts: Record<string, unknown>) => {
-      const mapped = mapOptsToFieldNames(opts, fields);
+    cmd.action(async (opts: Record<string, unknown>, command: Command) => {
+      const mapped = mapOptsToFieldNames(opts, fields, command);
       await runGenerate(gen.name, mapped);
     });
   }
