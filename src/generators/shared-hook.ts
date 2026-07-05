@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { validateName } from '../utils/validation.js';
 
 export type SharedHookAnswers = {
@@ -7,18 +8,11 @@ export type SharedHookAnswers = {
   reactImports: string[];
 };
 
-export function sharedHookPrompts() {
+export function sharedHookFields(): GeneratorField[] {
   return [
+    { name: 'name', type: 'input', message: 'Hook name (e.g., WindowSize, Clipboard):', required: true, validate: validateName },
     {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Hook name (e.g., WindowSize, Clipboard):',
-      validate: validateName,
-    },
-    {
-      type: 'checkbox' as const,
-      name: 'reactImports',
-      message: 'Which React imports?',
+      name: 'reactImports', type: 'checkbox', message: 'Which React imports?',
       choices: [
         { name: 'useState', value: 'useState', checked: true },
         { name: 'useEffect', value: 'useEffect', checked: true },

@@ -1,41 +1,41 @@
 import { describe, it, expect } from 'vitest';
 
-import { pagePrompts, pageActions, preprocessPageAnswers, type PageAnswers } from '../page.js';
+import { pageFields, pageActions, preprocessPageAnswers, type PageAnswers } from '../page.js';
 import { DEFAULT_CONFIG } from '../../config/defaults.js';
 
-describe('pagePrompts', () => {
-  it('returns prompts array', () => {
-    const prompts = pagePrompts(DEFAULT_CONFIG);
-    expect(Array.isArray(prompts)).toBe(true);
-    expect(prompts.length).toBeGreaterThanOrEqual(2);
+describe('pageFields', () => {
+  it('returns fields array', () => {
+    const fields = pageFields(DEFAULT_CONFIG);
+    expect(Array.isArray(fields)).toBe(true);
+    expect(fields.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('has name prompt', () => {
-    const prompts = pagePrompts(DEFAULT_CONFIG);
-    expect(prompts.find((p) => p.name === 'name')).toBeDefined();
+  it('has name field', () => {
+    const fields = pageFields(DEFAULT_CONFIG);
+    expect(fields.find((f) => f.name === 'name')).toBeDefined();
   });
 
-  it('has category prompt', () => {
-    const prompts = pagePrompts(DEFAULT_CONFIG);
-    expect(prompts.find((p) => p.name === 'category')).toBeDefined();
+  it('has category field', () => {
+    const fields = pageFields(DEFAULT_CONFIG);
+    expect(fields.find((f) => f.name === 'category')).toBeDefined();
   });
 
-  it('includes route prompts when routeRegistration is enabled', () => {
+  it('includes route fields when routeRegistration is enabled', () => {
     const config = {
       ...DEFAULT_CONFIG,
       features: { ...DEFAULT_CONFIG.features, routeRegistration: true },
     };
-    const prompts = pagePrompts(config);
-    expect(prompts.find((p) => p.name === 'registerRoute')).toBeDefined();
+    const fields = pageFields(config);
+    expect(fields.find((f) => f.name === 'registerRoute')).toBeDefined();
   });
 
-  it('excludes route prompts when routeRegistration is disabled', () => {
+  it('excludes route fields when routeRegistration is disabled', () => {
     const config = {
       ...DEFAULT_CONFIG,
       features: { ...DEFAULT_CONFIG.features, routeRegistration: false },
     };
-    const prompts = pagePrompts(config);
-    expect(prompts.find((p) => p.name === 'registerRoute')).toBeUndefined();
+    const fields = pageFields(config);
+    expect(fields.find((f) => f.name === 'registerRoute')).toBeUndefined();
   });
 });
 

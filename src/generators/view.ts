@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { dirExists, getDirectories } from '../utils/fs.js';
 import { validateName } from '../utils/validation.js';
 
@@ -9,30 +10,17 @@ export type ViewAnswers = {
   name: string;
 };
 
-export function viewPrompts(config: RqCodegenConfig) {
+export function viewFields(config: RqCodegenConfig): GeneratorField[] {
   return [
     {
-      type: 'list' as const,
-      name: 'feature',
-      message: 'Feature (parent folder):',
+      name: 'feature', type: 'list', message: 'Feature (parent folder):', required: true,
       choices: () => {
         const dirs = getDirectories(`${config.srcDir}/${config.paths.views}`);
         return [...dirs, '── Create new feature ──'];
       },
     },
-    {
-      type: 'input' as const,
-      name: 'newFeature',
-      message: 'New feature name (kebab-case):',
-      when: (answers: ViewAnswers) => answers.feature === '── Create new feature ──',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'name',
-      message: 'View component name (e.g., CommunityCard):',
-      validate: validateName,
-    },
+    { name: 'newFeature', type: 'input', message: 'New feature name (kebab-case):', validate: validateName, when: (a) => a.feature === '── Create new feature ──' },
+    { name: 'name', type: 'input', message: 'View component name (e.g., CommunityCard):', required: true, validate: validateName },
   ];
 }
 

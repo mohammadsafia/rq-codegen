@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { toPascalCase } from '../utils/string.js';
 import { validateName } from '../utils/validation.js';
 
@@ -11,29 +12,13 @@ export type FeatureAnswers = {
   isPaginated?: boolean;
 };
 
-export function featurePrompts() {
+export function featureFields(): GeneratorField[] {
   return [
+    { name: 'name', type: 'input', message: 'Feature/entity name (e.g., products):', required: true, validate: validateName },
+    { name: 'singularName', type: 'input', flag: 'singular', message: 'Singular entity name for mutations (e.g., product):', required: true, validate: validateName },
+    { name: 'endpointKey', type: 'input', flag: 'endpoint', message: 'ApiEndpoints key (e.g., PRODUCTS):', required: true },
     {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Feature/entity name (e.g., products):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'singularName',
-      message: 'Singular entity name for mutations (e.g., product):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'endpointKey',
-      message: 'ApiEndpoints key (e.g., PRODUCTS):',
-    },
-    {
-      type: 'checkbox' as const,
-      name: 'artifacts',
-      message: 'Which artifacts to generate?',
+      name: 'artifacts', type: 'checkbox', message: 'Which artifacts to generate?',
       choices: [
         { name: 'API Handler', value: 'handler', checked: true },
         { name: 'DTO Types', value: 'types', checked: true },
@@ -47,15 +32,7 @@ export function featurePrompts() {
         { name: 'Validation Schema', value: 'validation' },
       ],
     },
-    {
-      type: 'confirm' as const,
-      name: 'isPaginated',
-      message: 'Is the list endpoint paginated?',
-      default: false,
-      when: (answers: FeatureAnswers) => {
-        return answers.artifacts?.includes('queryList');
-      },
-    },
+    { name: 'isPaginated', type: 'confirm', message: 'Is the list endpoint paginated?', default: false, when: (a) => Array.isArray(a.artifacts) && (a.artifacts as string[]).includes('queryList') },
   ];
 }
 

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { getGenerators } from '../index.js';
 import { DEFAULT_CONFIG } from '../../config/defaults.js';
+import { fieldsToOptions } from '../../core/fields.js';
 
 describe('getGenerators', () => {
   it('returns 12 generators', () => {
@@ -62,5 +63,25 @@ describe('getGenerators', () => {
     const generators = getGenerators(DEFAULT_CONFIG);
     const page = generators.find((g) => g.name === 'page');
     expect(page?.preprocess).toBeDefined();
+  });
+});
+
+describe('GeneratorDefinition.fields slot', () => {
+  it('every generator exposes a prompts function (unchanged)', () => {
+    const gens = getGenerators(DEFAULT_CONFIG);
+    for (const g of gens) {
+      expect(typeof g.prompts).toBe('function');
+    }
+  });
+});
+
+describe('every generator derives CLI options', () => {
+  it('produces at least one option per generator', () => {
+    const gens = getGenerators(DEFAULT_CONFIG);
+    for (const g of gens) {
+      expect(g.fields).toBeDefined();
+      const opts = fieldsToOptions(g.fields!(DEFAULT_CONFIG));
+      expect(opts.length).toBeGreaterThan(0);
+    }
   });
 });

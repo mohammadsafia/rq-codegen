@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { validateName } from '../utils/validation.js';
 
 export type MutationHookAnswers = {
@@ -9,32 +10,12 @@ export type MutationHookAnswers = {
   invalidateKey: string;
 };
 
-export function mutationHookPrompts() {
+export function mutationHookFields(): GeneratorField[] {
   return [
-    {
-      type: 'input' as const,
-      name: 'mutationName',
-      message: 'Mutation name (e.g., CreateCommunity, UpdateUser):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'handlerName',
-      message: 'Handler name to import (e.g., Community):',
-      validate: validateName,
-    },
-    {
-      type: 'input' as const,
-      name: 'handlerKey',
-      message: 'Handler mutation key (e.g., create, update, remove):',
-      default: 'create',
-    },
-    {
-      type: 'input' as const,
-      name: 'invalidateKey',
-      message: 'Handler query key to invalidate on success (e.g., list):',
-      default: 'list',
-    },
+    { name: 'mutationName', type: 'input', message: 'Mutation name (e.g., CreateCommunity, UpdateUser):', required: true, validate: validateName },
+    { name: 'handlerName', type: 'input', message: 'Handler name to import (e.g., Community):', required: true, validate: validateName },
+    { name: 'handlerKey', type: 'input', message: 'Handler mutation key (e.g., create, update, remove):', default: 'create' },
+    { name: 'invalidateKey', type: 'input', message: 'Handler query key to invalidate on success (e.g., list):', default: 'list' },
   ];
 }
 

@@ -1,5 +1,6 @@
 import type { RqCodegenConfig } from '../config/types.js';
 import type { GeneratorAction } from '../core/engine.js';
+import type { GeneratorField } from '../core/fields.js';
 import { getDirectories } from '../utils/fs.js';
 import { validateName } from '../utils/validation.js';
 
@@ -13,65 +14,28 @@ export type PageAnswers = {
   routePath?: string;
 };
 
-export function pagePrompts(config: RqCodegenConfig) {
-  const prompts = [
+export function pageFields(config: RqCodegenConfig): GeneratorField[] {
+  const fields: GeneratorField[] = [
+    { name: 'name', type: 'input', message: 'Page name (e.g., Communities, EventDetails):', required: true, validate: validateName },
     {
-      type: 'input' as const,
-      name: 'name',
-      message: 'Page name (e.g., Communities, EventDetails):',
-      validate: validateName,
-    },
-    {
-      type: 'list' as const,
-      name: 'category',
-      message: 'Page category (folder):',
+      name: 'category', type: 'list', message: 'Page category (folder):', required: true,
       choices: () => {
         const dirs = getDirectories(`${config.srcDir}/${config.paths.pages}`);
         return [...dirs, '── Create new category ──'];
       },
     },
-    {
-      type: 'input' as const,
-      name: 'newCategory',
-      message: 'New category name (kebab-case):',
-      when: (answers: PageAnswers) => answers.category === '── Create new category ──',
-      validate: validateName,
-    },
+    { name: 'newCategory', type: 'input', message: 'New category name (kebab-case):', validate: validateName, when: (a) => a.category === '── Create new category ──' },
   ];
 
   if (config.features.routeRegistration) {
-    prompts.push(
-      {
-        type: 'confirm' as const,
-        name: 'registerRoute',
-        message: 'Auto-register route in router?',
-        default: true,
-      } as never,
-      {
-        type: 'list' as const,
-        name: 'layout',
-        message: 'Which layout?',
-        choices: () => config.router.layouts,
-        when: (answers: PageAnswers) => !!answers.registerRoute,
-      } as never,
-      {
-        type: 'confirm' as const,
-        name: 'isProtected',
-        message: 'Is this a protected route (requires auth)?',
-        default: true,
-        when: (answers: PageAnswers) => !!answers.registerRoute,
-      } as never,
-      {
-        type: 'input' as const,
-        name: 'routePath',
-        message: 'Route path (e.g., communities, events/details):',
-        when: (answers: PageAnswers) => !!answers.registerRoute,
-        validate: validateName,
-      } as never,
+    fields.push(
+      { name: 'registerRoute', type: 'confirm', message: 'Auto-register route in router?', default: true },
+      { name: 'layout', type: 'list', message: 'Which layout?', choices: () => config.router.layouts, when: (a) => !!a.registerRoute },
+      { name: 'isProtected', type: 'confirm', message: 'Is this a protected route (requires auth)?', default: true, when: (a) => !!a.registerRoute },
+      { name: 'routePath', type: 'input', message: 'Route path (e.g., communities, events/details):', validate: validateName, when: (a) => !!a.registerRoute },
     );
   }
-
-  return prompts;
+  return fields;
 }
 
 export function preprocessPageAnswers(answers: PageAnswers): PageAnswers {
